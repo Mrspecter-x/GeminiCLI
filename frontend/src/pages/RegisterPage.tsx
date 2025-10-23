@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Register = () => {
+const RegisterPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,12 +22,10 @@ const Register = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // If response is not 2xx, throw an error to be caught by the catch block
         throw new Error(data.error || 'Something went wrong');
       }
 
       setMessage(`Registration successful! Welcome, ${data.username}.`);
-      // Clear form
       setUsername('');
       setEmail('');
       setPassword('');
@@ -78,4 +76,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default RegisterPage;
