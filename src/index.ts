@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-
 import cors from 'cors';
+import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 
 // Initialize Prisma and Express
 const prisma = new PrismaClient();
@@ -12,7 +12,6 @@ const app = express();
 const allowedOrigins = ['http://c0c8cwg8cs0gos8woogckw4k.185.85.238.238.sslip.io'];
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -27,6 +26,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET || 'your-default-secret'; // Fallback secret
 
 /**
  * Main endpoint to check if the server is running.
@@ -37,30 +37,20 @@ app.get('/', (req: Request, res: Response) => {
 
 /**
  * API endpoint for user registration.
- * Expects { email, username, password } in the request body.
  */
 app.post('/api/register', async (req: Request, res: Response) => {
   try {
     const { email, username, password } = req.body;
-
-    // Basic validation
     if (!email || !username || !password) {
       return res.status(400).json({ error: 'Email, username, and password are required.' });
     }
-
-    // Check if user already exists
     const existingUser = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] },
     });
-
     if (existingUser) {
       return res.status(409).json({ error: 'User with this email or username already exists.' });
     }
-
-    // Hash the password for security
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create the new user in the database
     const newUser = await prisma.user.create({
       data: {
         email,
@@ -68,16 +58,47 @@ app.post('/api/register', async (req: Request, res: Response) => {
         password: hashedPassword,
       },
     });
-
-    // Respond with the created user (omitting the password)
     const { password: _, ...userWithoutPassword } = newUser;
     res.status(201).json(userWithoutPassword);
-
   } catch (error) {
     console.error('Registration Error:', error);
     res.status(500).json({ error: 'An internal server error occurred.' });
   }
 });
+
+/**
+ * API endpoint for user login.
+ */
+app.post('/api/login', async (req: Request, res: Response) => {
+  try {
+    const { username, password } = req.body;
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Invalid credentials.' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ token });
+
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ error: 'An internal server error occurred.' });
+  }
+});
+
 
 /**
  * Start the Express server.
