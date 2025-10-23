@@ -1,69 +1,100 @@
 import { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Sphere } from '@react-three/drei';
+import { OrbitControls, Sphere, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { TextureLoader } from 'three';
 
-const GlobeMesh = ({ isInteracting }: { isInteracting: boolean }) => {
-  const meshRef = useRef<THREE.Mesh>(null!);
-  
-  // Public domain texture from Wikimedia Commons
-  const textureUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/1280px-Equirectangular_projection_SW.jpg';
-  const texture = useLoader(TextureLoader, textureUrl);
+// Custom Glow Shader
+const vertexShader = `
+varying vec3 vNormal;
+void main() {
+  vNormal = normalize( normalMatrix * normal );
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+`;
 
-  // This hook will run on every frame
-  useFrame((_, delta) => { // FIX 1: 'state' parameter is changed to '_' because it's unused
-    // Only rotate if the user is not interacting with the globe
-    if (meshRef.current && !isInteracting) {
-      // Rotate at a consistent speed, independent of frame rate
-      meshRef.current.rotation.y += delta * 0.1;
+const fragmentShader = `
+varying vec3 vNormal;
+void main() {
+  float intensity = pow( 0.7 - dot( vNormal, vec3( 0.0, 0.0, 1.0 ) ), 4.0 );
+  gl_FragColor = vec4( 0.3, 0.6, 1.0, 1.0 ) * intensity;
+}
+`;
+
+const Earth = ({ isInteracting }: { isInteracting: boolean }) => {
+  const earthRef = useRef<THREE.Mesh>(null!);
+  const cloudsRef = useRef<THREE.Mesh>(null!);
+
+  // High-resolution textures
+  const earthTexture = useLoader(TextureLoader, 'https://upload.wikimedia.org/wikipedia/commons/5/56/Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg');
+  const cloudTexture = useLoader(TextureLoader, 'https://clouds.matteason.co.uk/images/8192x4096/clouds.jpg');
+
+  useFrame((_, delta) => {
+    if (!isInteracting) {
+      if (earthRef.current) earthRef.current.rotation.y += delta * 0.05;
+      if (cloudsRef.current) cloudsRef.current.rotation.y += delta * 0.06;
     }
   });
 
   return (
-    <Sphere ref={meshRef} args={[2, 32, 32]}>
-      <meshStandardMaterial map={texture} />
-    </Sphere>
+    <group>
+      {/* Atmosphere */}
+      <Sphere args={[2.05, 64, 64]}>
+        <shaderMaterial
+          vertexShader={vertexShader}
+          fragmentShader={fragmentShader}
+          blending={THREE.AdditiveBlending}
+          side={THREE.BackSide}
+        />
+      </Sphere>
+
+      {/* Earth Sphere */}
+      <Sphere ref={earthRef} args={[2, 64, 64]}>
+        <meshStandardMaterial map={earthTexture} />
+      </Sphere>
+
+      {/* Cloud Layer */}
+      <Sphere ref={cloudsRef} args={[2.03, 64, 64]}>
+        <meshStandardMaterial map={cloudTexture} transparent={true} opacity={0.4} />
+      </Sphere>
+    </group>
   );
 };
 
 const Globe = () => {
   const [isInteracting, setIsInteracting] = useState(false);
-  // FIX 2: The type for setTimeout in browser is 'number', not 'NodeJS.Timeout'
   const timeoutRef = useRef<number | null>(null);
 
   const handleInteractionStart = () => {
     setIsInteracting(true);
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
 
   const handleInteractionEnd = () => {
-    // Set a timeout to resume rotation after 2.5 seconds of inactivity
-    timeoutRef.current = window.setTimeout(() => { // Using window.setTimeout for clarity
+    timeoutRef.current = window.setTimeout(() => {
       setIsInteracting(false);
     }, 2500);
   };
-  
-  // Cleanup timeout on component unmount
+
   useEffect(() => {
+    const timeout = timeoutRef.current;
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+      if (timeout) clearTimeout(timeout);
     };
   }, []);
 
-
   return (
-    <Canvas style={{ height: '500px', width: '500px', background: '#111' }}>
-      <ambientLight intensity={1.2} />
+    <Canvas style={{ position: 'absolute', top: 0, left: 0, height: '100vh', width: '100vw' }} camera={{ position: [0, 0, 5], fov: 45 }}>
+      <ambientLight intensity={0.4} />
       <directionalLight position={[10, 10, 5]} intensity={1.5} />
-      <GlobeMesh isInteracting={isInteracting} />
-      <OrbitControls 
-        enableZoom={true} 
-        autoRotate={false} 
+      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      <Earth isInteracting={isInteracting} />
+      <OrbitControls
+        enablePan={false} // Disables panning as requested
+        enableDamping={true} // Makes controls feel smoother
+        dampingFactor={0.05}
+        minDistance={3}
+        maxDistance={10}
         onStart={handleInteractionStart}
         onEnd={handleInteractionEnd}
       />
