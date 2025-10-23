@@ -1,32 +1,71 @@
-import { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useRef, useState, useEffect } from 'react';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sphere } from '@react-three/drei';
+import * as THREE from 'three';
+import { TextureLoader } from 'three';
 
-const GlobeMesh = () => {
+const GlobeMesh = ({ isInteracting }: { isInteracting: boolean }) => {
   const meshRef = useRef<THREE.Mesh>(null!);
+  
+  // Public domain texture from Wikimedia Commons
+  const textureUrl = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/1280px-Equirectangular_projection_SW.jpg';
+  const texture = useLoader(TextureLoader, textureUrl);
 
   // This hook will run on every frame
-  useFrame(() => {
-    if (meshRef.current) {
-      // This will make the globe rotate
-      meshRef.current.rotation.y += 0.001;
+  useFrame((state, delta) => {
+    // Only rotate if the user is not interacting with the globe
+    if (meshRef.current && !isInteracting) {
+      // Rotate at a consistent speed, independent of frame rate
+      meshRef.current.rotation.y += delta * 0.1;
     }
   });
 
   return (
     <Sphere ref={meshRef} args={[2, 32, 32]}>
-      <meshStandardMaterial color="royalblue" />
+      <meshStandardMaterial map={texture} />
     </Sphere>
   );
 };
 
 const Globe = () => {
+  const [isInteracting, setIsInteracting] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleInteractionStart = () => {
+    setIsInteracting(true);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+  };
+
+  const handleInteractionEnd = () => {
+    // Set a timeout to resume rotation after 2.5 seconds of inactivity
+    timeoutRef.current = setTimeout(() => {
+      setIsInteracting(false);
+    }, 2500);
+  };
+  
+  // Cleanup timeout on component unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+
   return (
-    <Canvas style={{ height: '500px', width: '500px' }}>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[10, 10, 5]} intensity={1} />
-      <GlobeMesh />
-      <OrbitControls enableZoom={false} autoRotate={false} />
+    <Canvas style={{ height: '500px', width: '500px', background: '#111' }}>
+      <ambientLight intensity={1.2} />
+      <directionalLight position={[10, 10, 5]} intensity={1.5} />
+      <GlobeMesh isInteracting={isInteracting} />
+      <OrbitControls 
+        enableZoom={true} 
+        autoRotate={false} 
+        onStart={handleInteractionStart}
+        onEnd={handleInteractionEnd}
+      />
     </Canvas>
   );
 };
