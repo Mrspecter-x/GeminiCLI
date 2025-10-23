@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StarryBackground from '../components/StarryBackground';
 
 const LoginPage = () => {
   const [username, setUsername] = useState('');
@@ -37,33 +38,36 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="register-container"> {/* Reusing the same style as register form */}
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="username">Username:</label>
-          <input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Password:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <>
+      <StarryBackground />
+      <div className="register-container"> {/* Reusing the same style as register form */}
+        <h2>Login</h2>
+        <form onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="username">Username:</label>
+            <input
+              type="text"
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="password">Password:</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit">Login</button>
+        </form>
+        {message && <p>{message}</p>}
+      </div>
+    </>
   );
 };
 

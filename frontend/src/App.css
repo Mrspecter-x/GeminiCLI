@@ -1,55 +1,44 @@
-/* Reset default styles */
+/* === GLOBAL STYLES === */
 body, #root {
   margin: 0;
   padding: 0;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden; /* Prevent scrollbars from the canvas */
-  background-color: #000; /* Black background for the space feel */
+  width: 100%;
+  height: 100%;
+  background-color: #000;
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* New styles for the layered layout */
-.globe-background {
-  position: absolute;
+#root {
+  overflow-x: hidden;
+  overflow-y: auto; /* Allow scrolling for the whole page */
+}
+
+/* === BACKGROUNDS === */
+.globe-background, .starry-background {
+  position: fixed; /* Use fixed to keep it in place while scrolling */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0; /* Background layer */
+  z-index: -1; /* Keep it in the back */
 }
 
+/* === FOREGROUND LAYOUT === */
 .App-foreground {
   position: relative;
-  z-index: 1; /* Foreground layer, on top of the globe */
+  z-index: 1;
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
 }
 
-/* The old .App class is no longer needed for layout */
-.App {
-  /* This can be empty or hold shared styles if needed */
-}
-
-/* Style the header to be an overlay */
 .App-header {
+  padding: 1.5rem;
   text-align: center;
-  padding: 1rem;
-  /* The background gradient is removed to make it fully transparent */
 }
 
 .App-header h1 {
   margin: 0;
-  font-size: 2rem;
-  color: white;
-  text-shadow: 0 0 10px rgba(0, 150, 255, 0.7);
-}
-
-nav {
-  margin-top: 0.5rem;
+  font-size: 2.5rem;
 }
 
 nav a {
@@ -57,23 +46,118 @@ nav a {
   margin: 0 1rem;
   text-decoration: none;
   font-weight: bold;
-  transition: color 0.2s;
 }
+nav a:hover { color: #fff; }
 
-nav a:hover {
-  color: #ffffff;
-}
-
-/* Main content area for forms etc. */
 main {
-  flex-grow: 1; /* Allow main to fill available space */
-  display: flex;
-  justify-content: center;
-  align-items: center;
   width: 100%;
 }
 
-/* Styles for the registration form page */
+/* === HOME PAGE LAYOUT === */
+.home-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+}
+
+.home-left, .home-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+/* Position the globe canvas on the left side */
+.home-left .globe-background {
+  position: absolute;
+  left: -50%; /* Move center of canvas to the left edge */
+  width: 200%;
+  height: 100%;
+  top: 0;
+}
+
+.welcome-content {
+  max-width: 500px;
+}
+
+.welcome-content h1 {
+  font-size: 3.5rem;
+  text-shadow: 0 0 15px rgba(0, 150, 255, 0.5);
+}
+
+.welcome-content p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  color: #ccc;
+}
+
+.home-buttons {
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 1rem 2rem;
+  margin: 0 0.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+.btn-primary:hover { background-color: #0056b3; }
+
+.btn-secondary {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+}
+.btn-secondary:hover { background-color: white; color: black; }
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: bounce 2s infinite;
+}
+
+.scroll-indicator .arrow {
+  width: 20px;
+  height: 20px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg);
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translate(-50%, 0); }
+  40% { transform: translate(-50%, -15px); }
+  60% { transform: translate(-50%, -5px); }
+}
+
+.promo-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  background-color: #051020;
+}
+
+/* === LOGIN/REGISTER PAGE === */
+.auth-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 150px); /* Full height minus header */
+}
+
 .register-container {
   background-color: rgba(10, 20, 40, 0.85);
   padding: 2rem;
@@ -84,77 +168,25 @@ main {
   max-width: 400px;
 }
 
-.register-container h2 {
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: #fff;
+/* === MEDIA QUERIES for Split Screen === */
+@media (min-width: 768px) {
+  .home-layout {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 100vh auto; /* First row is 100vh, promo section is auto */
+    overflow: hidden; /* Hide overflow on the main view */
+  }
+  .home-left {
+    grid-column: 1;
+    grid-row: 1;
+    position: relative;
+  }
+  .home-right {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .promo-section {
+    grid-column: 1 / -1; /* Span both columns */
+    grid-row: 2;
+  }
+  #root { overflow-y: auto; } /* Re-enable scroll on desktop */
 }
-
-form div {
-  margin-bottom: 1rem;
-  text-align: left;
-}
-
-form label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #aaccff;
-}
-
-form input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #003366;
-  background-color: #051020;
-  color: #fff;
-  border-radius: 6px;
-  font-size: 1rem;
-  box-sizing: border-box;
-}
-
-form input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.4);
-}
-
-form button {
-  width: 100%;
-  padding: 0.75rem;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-form button:hover {
-  background-color: #0056b3;
-}
-
-p {
-  margin-top: 1rem;
-  font-size: 1rem;
-  color: #fff;
-  text-align: center;
-}
-.home-content {
-  text-align: center;
-  color: white;
-  text-shadow: 2px 2px 4px #000;
-}
-
-.dashboard-ui {
-  position: absolute;
-  top: 100px; /* Position it below the header */
-  left: 20px;
-  background: rgba(0,0,0,0.5);
-  padding: 1rem;
-  border-radius: 8px;
-}
-

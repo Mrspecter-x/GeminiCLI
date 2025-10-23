@@ -10,7 +10,7 @@ const Earth = ({ isInteracting, isInteractive }: { isInteracting: boolean, isInt
   const earthRef = useRef<THREE.Mesh>(null!);
   const cloudsRef = useRef<THREE.Mesh>(null!);
 
-  const earthTexture = useLoader(TextureLoader, 'https://upload.wikimedia.org/wikipedia/commons/5/56/Blue_Marble_Next_Generation_%2B_topography_%2B_bathymetry.jpg');
+  const earthTexture = useLoader(TextureLoader, 'https://eoimages.gsfc.nasa.gov/images/imagerecords/73000/73909/world.topo.bathy.200412.3x8192x4096.jpg');
   const cloudTexture = useLoader(TextureLoader, 'https://clouds.matteason.co.uk/images/8192x4096/clouds.jpg');
 
   useFrame((_, delta) => {
