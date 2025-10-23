@@ -2,9 +2,26 @@ import express, { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
+import cors from 'cors';
+
 // Initialize Prisma and Express
 const prisma = new PrismaClient();
 const app = express();
+
+// CORS Configuration
+const allowedOrigins = ['http://c0c8cwg8cs0gos8woogckw4k.185.85.238.238.sslip.io'];
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+};
+app.use(cors(corsOptions));
 
 // Use JSON middleware to parse request bodies
 app.use(express.json());
