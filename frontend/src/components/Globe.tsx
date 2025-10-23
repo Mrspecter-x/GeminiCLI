@@ -84,7 +84,7 @@ const Globe = () => {
   }, []);
 
   return (
-    <Canvas style={{ position: 'absolute', top: 0, left: 0, height: '100vh', width: '100vw', zIndex: -1 }} camera={{ position: [0, 0, 5], fov: 45 }}>
+    <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
       <ambientLight intensity={0.4} />
       <directionalLight position={[10, 10, 5]} intensity={1.5} />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />

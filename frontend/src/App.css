@@ -10,30 +10,41 @@ body, #root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Make the main App container a flex layout to center content */
-.App {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  height: 100%;
-}
-
-/* Style the header to be an overlay */
-.App-header {
+/* New styles for the layered layout */
+.globe-background {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 10;
+  height: 100%;
+  z-index: 0; /* Background layer */
+}
+
+.App-foreground {
+  position: relative;
+  z-index: 1; /* Foreground layer, on top of the globe */
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The old .App class is no longer needed for layout */
+.App {
+  /* This can be empty or hold shared styles if needed */
+}
+
+/* Style the header to be an overlay */
+.App-header {
   text-align: center;
   padding: 1rem;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+  /* The background gradient is removed to make it fully transparent */
 }
 
 .App-header h1 {
   margin: 0;
   font-size: 2rem;
+  color: white;
   text-shadow: 0 0 10px rgba(0, 150, 255, 0.7);
 }
 
@@ -55,13 +66,11 @@ nav a:hover {
 
 /* Main content area for forms etc. */
 main {
-  position: relative;
-  z-index: 10;
+  flex-grow: 1; /* Allow main to fill available space */
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 100%;
 }
 
 /* Styles for the registration form page */
