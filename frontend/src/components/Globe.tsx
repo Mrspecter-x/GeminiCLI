@@ -12,7 +12,7 @@ const GlobeMesh = ({ isInteracting }: { isInteracting: boolean }) => {
   const texture = useLoader(TextureLoader, textureUrl);
 
   // This hook will run on every frame
-  useFrame((state, delta) => {
+  useFrame((_, delta) => { // FIX 1: 'state' parameter is changed to '_' because it's unused
     // Only rotate if the user is not interacting with the globe
     if (meshRef.current && !isInteracting) {
       // Rotate at a consistent speed, independent of frame rate
@@ -29,7 +29,8 @@ const GlobeMesh = ({ isInteracting }: { isInteracting: boolean }) => {
 
 const Globe = () => {
   const [isInteracting, setIsInteracting] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // FIX 2: The type for setTimeout in browser is 'number', not 'NodeJS.Timeout'
+  const timeoutRef = useRef<number | null>(null);
 
   const handleInteractionStart = () => {
     setIsInteracting(true);
@@ -40,7 +41,7 @@ const Globe = () => {
 
   const handleInteractionEnd = () => {
     // Set a timeout to resume rotation after 2.5 seconds of inactivity
-    timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = window.setTimeout(() => { // Using window.setTimeout for clarity
       setIsInteracting(false);
     }, 2500);
   };
