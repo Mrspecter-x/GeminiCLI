@@ -20,7 +20,6 @@ const ShootingStars = () => {
   useFrame((_, delta) => {
     if (ref.current) {
       for (let i = 0; i < particles.length / 3; i++) {
-        const i3 = i * 3;
         ref.current.children[i].position.x -= delta * (20 + Math.random() * 30);
         ref.current.children[i].position.y -= delta * (15 + Math.random() * 20);
 
